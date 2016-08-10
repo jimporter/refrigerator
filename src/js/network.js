@@ -1,5 +1,5 @@
 function Server() {
-  this._sockets = new Set();
+  this._sockets = new Map();
 
   navigator.publishServer('Refrigerator').then((server) => {
 
@@ -14,24 +14,29 @@ function Server() {
 
       // Remove the leading '/' from the URL so that this works ok when opened
       // as a local file.
-      console.log(event.request.url, url);
       fetch(url.substr(1)).then((response) => {
         event.respondWith(response);
       });
     };
 
+    let userId = 1;
     server.onwebsocket = (event) => {
       let socket = event.accept();
       socket.onopen = (event) => {
-        this.send('* user joined');
-        this._sockets.add(socket);
+        var id = userId++;
+        this._onmessage({type: 'userjoined'}, id);
+        this._sockets.set(socket, id);
       };
       socket.onclose = (event) => {
+        var id = this._sockets.get(socket);
         this._sockets.delete(socket);
-        this.send('* user parted');
+        this._onmessage({type: 'userparted'}, id);
       };
       socket.onmessage = (event) => {
-        this.send(event.data);
+        console.log('incoming message', event.data);
+        this._onmessage(
+          JSON.parse(event.data), this._sockets.get(socket)
+        );
       };
     };
 
@@ -45,15 +50,32 @@ function Server() {
 
 Server.prototype = {
   onopen: null,
-  onmessage: null,
+  onuserjoined: null,
+  onuserparted: null,
+  onchat: null,
 
-  send: function(data) {
-    if (this.onmessage)
-      this.onmessage(new MessageEvent('message', {data: data}));
-    for (let i of this._sockets)
-      i.send(data);
+  _relay: function(data) {
+    var string = JSON.stringify(data);
+    for (let [socket, id] of this._sockets)
+      socket.send(string);
+  },
+
+  _onmessage: function(data, userId) {
+    data.userId = userId;
+
+    let handler = 'on' + data.type;
+    if (this[handler])
+      this[handler](data);
+    this._relay(data);
+  },
+
+  sendChat: function(message) {
+    let data = {type: 'chat', userId: 0, value: message}
+    if (this.onchat)
+      this.onchat(data);
+    this._relay(data);
   },
 };
 
 
-var conn = new Server();
+let conn = new Server();
