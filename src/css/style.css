@@ -2,6 +2,12 @@ body {
   margin: 0;
 }
 
+#user-info {
+  padding: 0.25em;
+  border-bottom: 1px solid grey;
+  background-color: lightgrey;
+}
+
 #chat {
   display: flex;
   flex-direction: column;

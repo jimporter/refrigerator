@@ -2,7 +2,9 @@ function addChatLine(message) {
   document.getElementById('scrollback').textContent += message + '\n';
 }
 
-conn.onopen = (event) => {
+conn.onconnected = (data) => {
+  document.getElementById('user-info').textContent = 'User ' + data.userId;
+
   document.getElementById('chat-input').addEventListener('change', (event) => {
     conn.sendChat(event.target.value);
     event.target.value = '';

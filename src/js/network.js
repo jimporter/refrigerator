@@ -26,6 +26,7 @@ function Server() {
         var id = userId++;
         this._onmessage({type: 'userjoined'}, id);
         this._sockets.set(socket, id);
+        socket.send(JSON.stringify({type: 'connected', userId: id}));
       };
       socket.onclose = (event) => {
         var id = this._sockets.get(socket);
@@ -40,8 +41,8 @@ function Server() {
       };
     };
 
-    if (this.onopen)
-      this.onopen(); // XXX: Pass an event.
+    if (this.onconnected)
+      this.onconnected({type: 'connected', userId: 0});
 
   }).catch((e) => {
     console.log('failed to publish server', e);
@@ -49,7 +50,7 @@ function Server() {
 }
 
 Server.prototype = {
-  onopen: null,
+  onconnected: null,
   onuserjoined: null,
   onuserparted: null,
   onchat: null,
@@ -60,6 +61,8 @@ Server.prototype = {
       socket.send(string);
   },
 
+  // Handle an incoming message, route it to the right event handler, and relay
+  // it to the clients.
   _onmessage: function(data, userId) {
     data.userId = userId;
 

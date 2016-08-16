@@ -6,17 +6,10 @@ function Client() {
 }
 
 Client.prototype = {
+  onconnected: null,
   onuserjoined: null,
   onuserparted: null,
   onchat: null,
-
-  get onopen() {
-    return this._socket.onopen;
-  },
-
-  set onopen(val) {
-    return this._socket.onopen = val;
-  },
 
   _onmessage: function(data) {
     let handler = 'on' + data.type;
@@ -26,6 +19,10 @@ Client.prototype = {
 
   sendChat: function(message) {
     this._socket.send(JSON.stringify({type: 'chat', value: message}));
+  },
+
+  onjoined: function(data) {
+    document.getElementById("user-info").textContent = "User " + data.userId;
   },
 };
 
