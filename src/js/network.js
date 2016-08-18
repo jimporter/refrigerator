@@ -7,7 +7,7 @@ function fetchAndRespond(url, event) {
   //
   // event.respondWith(fetch(url));
 
-  var contentType;
+  let contentType;
   return fetch(url).then((response) => {
     contentType = response.headers.get('Content-Type');
     return response.blob();
@@ -18,10 +18,9 @@ function fetchAndRespond(url, event) {
   });
 }
 
-function Server(canvas, scrollback) {
+function Server(canvas) {
   this._canvas = canvas;
-  // FIXME: Log scrollback separately.
-  this._scrollback = scrollback;
+  this._scrollback = [];
   this._sockets = new Map();
 
   navigator.publishServer('Refrigerator').then((server) => {
@@ -50,7 +49,7 @@ function Server(canvas, scrollback) {
         socket.send(JSON.stringify({
           type: 'connected', userId: id,
           image: this._canvas.toDataURL(),
-          chat: this._scrollback.textContent
+          chat: this._scrollback
         }));
       };
       socket.onclose = (event) => {
@@ -59,7 +58,6 @@ function Server(canvas, scrollback) {
         this._onmessage({type: 'userparted'}, id);
       };
       socket.onmessage = (event) => {
-        console.log('incoming message', event.data);
         this._onmessage(
           JSON.parse(event.data), this._sockets.get(socket)
         );
@@ -91,6 +89,10 @@ Server.prototype = {
   _onmessage: function(data, userId) {
     data.userId = userId;
 
+    // XXX: This should probably be abstracted somehow.
+    if (['chat', 'userjoined', 'userparted'].indexOf(data.type) !== -1)
+      this._scrollback.push(data);
+
     let handler = 'on' + data.type;
     if (this[handler])
       this[handler](data);
@@ -98,21 +100,12 @@ Server.prototype = {
   },
 
   sendChat: function(message) {
-    let data = {type: 'chat', userId: 0, value: message}
-    if (this.onchat)
-      this.onchat(data);
-    this._relay(data);
+    this._onmessage({type: 'chat', value: message}, 0);
   },
 
   sendDrawing: function(info) {
-    let data = {type: 'drawing', userId: 0, value: info}
-    if (this.ondrawing)
-      this.ondrawing(data);
-    this._relay(data);
+    this._onmessage({type: 'drawing', value: info}, 0);
   },
 };
 
-let conn = new Server(
-  document.getElementById('canvas'),
-  document.getElementById('scrollback')
-);
+let conn = new Server(document.getElementById('canvas'));

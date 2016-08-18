@@ -33,7 +33,22 @@ body {
 }
 
 #scrollback {
-  margin: 0.5em;
   flex-grow: 1;
   overflow: auto;
+}
+
+.chat-line {
+  padding: 0.25em;
+}
+
+.chat-line:not(:last-child) {
+  border-bottom: 1px solid grey;
+}
+
+.chat-author {
+  font-weight: 800;
+}
+
+.chat-server-log {
+  color: grey;
 }

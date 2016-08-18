@@ -1,5 +1,36 @@
-function addChatLine(message) {
-  document.getElementById('scrollback').textContent += message + '\n';
+function addChatLine(data) {
+  let line = document.createElement('div');
+  line.className = 'chat-line';
+
+  if (data.type === 'chat') {
+
+    let author = document.createElement('span');
+    author.className = 'chat-author';
+    author.textContent = 'user ' + data.userId;
+    line.appendChild(author);
+
+    let message = document.createElement('span');
+    message.className = 'chat-message';
+    message.textContent = ' ' + data.value;
+    line.appendChild(message);
+
+  } else if (data.type === 'userjoined') {
+
+    let message = document.createElement('span');
+    message.className = 'chat-server-log';
+    message.textContent = 'user ' + data.userId + ' joined';
+    line.appendChild(message);
+
+  } else if (data.type === 'userparted') {
+
+    let message = document.createElement('span');
+    message.className = 'chat-server-log';
+    message.textContent = 'user ' + data.userId + ' parted';
+    line.appendChild(message);
+
+  }
+
+  document.getElementById('scrollback').appendChild(line);
 }
 
 function addCircle(info) {
@@ -26,27 +57,24 @@ conn.onconnected = (data) => {
     conn.sendDrawing(info);
   });
 
-  let img = new Image();
-  img.src = data.image;
-  img.onload = (event) => {
-    let canvas = document.getElementById('canvas').getContext('2d');
-    canvas.drawImage(img, 0, 0);
-  };
+  if ('image' in data) {
+    let img = new Image();
+    img.src = data.image;
+    img.onload = (event) => {
+      let canvas = document.getElementById('canvas').getContext('2d');
+      canvas.drawImage(img, 0, 0);
+    };
+  }
 
-  document.getElementById('scrollback').textContent = data.chat;
+  if ('chat' in data) {
+    for (let i of data.chat)
+      addChatLine(i);
+  }
 };
 
-conn.onuserjoined = (data) => {
-  addChatLine('* user ' + data.userId + ' joined');
-};
-
-conn.onuserparted = (data) => {
-  addChatLine('* user ' + data.userId + ' parted');
-};
-
-conn.onchat = (data) => {
-  addChatLine('<user ' + data.userId + '> ' + data.value);
-};
+conn.onuserjoined = addChatLine;
+conn.onuserparted = addChatLine;
+conn.onchat = addChatLine;
 
 conn.ondrawing = (data) => {
   addCircle(data.value);
