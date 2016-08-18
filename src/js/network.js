@@ -1,3 +1,23 @@
+function fetchAndRespond(url, event) {
+  // XXX: Ideally, we should be able to just pass the result of the `fetch()`
+  // call directly to `respondWith()`. However, this will not work if the page
+  // hosting the FlyWeb server is on a host using HTTP compression (e.g. GitHub
+  // Pages). Once HTTP compression is supported, this can all be reduced to a
+  // single line of code:
+  //
+  // evt.respondWith(fetch(url));
+
+  var contentType;
+  return fetch(url).then((response) => {
+    contentType = response.headers.get('Content-Type');
+    return response.blob();
+  }).then((blob) => {
+    event.respondWith(new Response(blob, {
+      headers: {'Content-Type': contentType}
+    }));
+  });
+}
+
 function Server() {
   this._sockets = new Map();
 
@@ -14,9 +34,7 @@ function Server() {
 
       // Remove the leading '/' from the URL so that this works ok when opened
       // as a local file.
-      fetch(url.substr(1)).then((response) => {
-        event.respondWith(response);
-      });
+      fetchAndRespond(url.substr(1), event);
     };
 
     let userId = 1;
