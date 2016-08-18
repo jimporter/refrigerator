@@ -5,7 +5,7 @@ function fetchAndRespond(url, event) {
   // Pages). Once HTTP compression is supported, this can all be reduced to a
   // single line of code:
   //
-  // evt.respondWith(fetch(url));
+  // event.respondWith(fetch(url));
 
   var contentType;
   return fetch(url).then((response) => {
@@ -18,7 +18,10 @@ function fetchAndRespond(url, event) {
   });
 }
 
-function Server() {
+function Server(canvas, scrollback) {
+  this._canvas = canvas;
+  // FIXME: Log scrollback separately.
+  this._scrollback = scrollback;
   this._sockets = new Map();
 
   navigator.publishServer('Refrigerator').then((server) => {
@@ -46,8 +49,8 @@ function Server() {
         this._sockets.set(socket, id);
         socket.send(JSON.stringify({
           type: 'connected', userId: id,
-          // XXX: Don't refer to the UI here; it's messy.
-          image: document.getElementById('canvas').toDataURL()
+          image: this._canvas.toDataURL(),
+          chat: this._scrollback.textContent
         }));
       };
       socket.onclose = (event) => {
@@ -109,4 +112,7 @@ Server.prototype = {
   },
 };
 
-let conn = new Server();
+let conn = new Server(
+  document.getElementById('canvas'),
+  document.getElementById('scrollback')
+);

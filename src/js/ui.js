@@ -32,6 +32,8 @@ conn.onconnected = (data) => {
     let canvas = document.getElementById('canvas').getContext('2d');
     canvas.drawImage(img, 0, 0);
   };
+
+  document.getElementById('scrollback').textContent = data.chat;
 };
 
 conn.onuserjoined = (data) => {
