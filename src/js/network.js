@@ -26,7 +26,11 @@ function Server() {
         var id = userId++;
         this._onmessage({type: 'userjoined'}, id);
         this._sockets.set(socket, id);
-        socket.send(JSON.stringify({type: 'connected', userId: id}));
+        socket.send(JSON.stringify({
+          type: 'connected', userId: id,
+          // XXX: Don't refer to the UI here; it's messy.
+          image: document.getElementById('canvas').toDataURL()
+        }));
       };
       socket.onclose = (event) => {
         var id = this._sockets.get(socket);
@@ -78,7 +82,13 @@ Server.prototype = {
       this.onchat(data);
     this._relay(data);
   },
-};
 
+  sendDrawing: function(info) {
+    let data = {type: 'drawing', userId: 0, value: info}
+    if (this.ondrawing)
+      this.ondrawing(data);
+    this._relay(data);
+  },
+};
 
 let conn = new Server();

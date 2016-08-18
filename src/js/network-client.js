@@ -21,8 +21,8 @@ Client.prototype = {
     this._socket.send(JSON.stringify({type: 'chat', value: message}));
   },
 
-  onjoined: function(data) {
-    document.getElementById("user-info").textContent = "User " + data.userId;
+  sendDrawing: function(info) {
+    this._socket.send(JSON.stringify({type: 'drawing', value: info}));
   },
 };
 

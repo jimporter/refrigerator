@@ -1,17 +1,35 @@
 body {
   margin: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+#drawing {
+  flex-grow: 1;
+}
+
+#canvas {
+  display: block;
+  border: 1px solid grey;
+  margin: 1em;
+}
+
+#make-circle {
+  margin: 1em;
+}
+
+#chat {
+  display: flex;
+  flex-direction: column;
+  width: 25vw;
+  height: 100vh;
+  border-left: 1px solid grey;
 }
 
 #user-info {
   padding: 0.25em;
   border-bottom: 1px solid grey;
   background-color: lightgrey;
-}
-
-#chat {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
 }
 
 #scrollback {
