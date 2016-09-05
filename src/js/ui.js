@@ -66,8 +66,8 @@ conn.onconnected = (data) => {
     let id = generateId();
     let info = {
       id: id,
-      x: event.clientX - primary.offsetLeft,
-      y: event.clientY - primary.offsetTop,
+      x: event.layerX - primary.offsetLeft,
+      y: event.layerY - primary.offsetTop,
       radius: parseInt(document.getElementById('brush-size').value),
       color: document.getElementById('brush-color').value,
     };
