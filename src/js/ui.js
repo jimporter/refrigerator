@@ -44,10 +44,11 @@ function createWorkingCanvas(primary, id) {
   return working;
 }
 
-function addCircle(canvas, info) {
-  canvas.beginPath();
-  canvas.arc(info.x, info.y, info.radius, 0, Math.PI*2);
-  canvas.fill();
+function addCircle(ctx, info) {
+  ctx.fillStyle = info.color;
+  ctx.beginPath();
+  ctx.arc(info.x, info.y, info.radius, 0, Math.PI*2);
+  ctx.fill();
 }
 
 conn.onconnected = (data) => {
@@ -68,6 +69,7 @@ conn.onconnected = (data) => {
       x: event.clientX - primary.offsetLeft,
       y: event.clientY - primary.offsetTop,
       radius: parseInt(document.getElementById('brush-size').value),
+      color: document.getElementById('brush-color').value,
     };
 
     let working = createWorkingCanvas(primary, id);

@@ -31,8 +31,8 @@ body {
   display: block;
 }
 
-#make-circle {
-  margin: 1em;
+#toolbar {
+  display: flex;
 }
 
 #chat {
