@@ -108,6 +108,12 @@ conn.onconnected = (data) => {
     img.onload = (event) => {
       primary.getContext('2d').drawImage(img, 0, 0);
     };
+  } else {
+    // Initialize the canvas to white.
+    let ctx = primary.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, primary.width, primary.height);
+    ctx.fillStyle = 'black';
   }
 
   if ('chat' in data) {
