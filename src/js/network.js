@@ -94,13 +94,9 @@ Server.prototype = {
       this._scrollback.push(data);
 
     let handler = 'on' + data.type;
-    // XXX: The setTimeout is just here to simulate network latency. Remove this
-    // once things have stabilized a bit more.
-    setTimeout(() => {
-      if (this[handler])
-        this[handler](data);
-      this._relay(data);
-    }, 500);
+    if (this[handler])
+      this[handler](data);
+    this._relay(data);
   },
 
   sendChat: function(message) {
