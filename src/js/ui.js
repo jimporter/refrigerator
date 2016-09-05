@@ -67,7 +67,7 @@ conn.onconnected = (data) => {
       id: id,
       x: event.clientX - primary.offsetLeft,
       y: event.clientY - primary.offsetTop,
-      radius: 10
+      radius: parseInt(document.getElementById('brush-size').value),
     };
 
     let working = createWorkingCanvas(primary, id);
