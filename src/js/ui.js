@@ -33,14 +33,34 @@ function addChatLine(data) {
   document.getElementById('scrollback').appendChild(line);
 }
 
-function addCircle(info) {
-  let canvas = document.getElementById('canvas').getContext('2d');
+function createWorkingCanvas(primary, id) {
+  let working = document.createElement('canvas');
+  working.className = 'working-canvas';
+  working.dataset.id = id;
+  working.width = primary.width;
+  working.height = primary.height;
+
+  primary.parentNode.insertBefore(working, primary);
+  return working;
+}
+
+function addCircle(canvas, info) {
   canvas.beginPath();
   canvas.arc(info.x, info.y, info.radius, 0, Math.PI*2);
   canvas.fill();
 }
 
 conn.onconnected = (data) => {
+  let primary = document.getElementById('primary-canvas');
+  let drawingId = 0;
+
+  // XXX: Who should be responsible for the userId portion? The client (as it is
+  // now) or the server? The latter is safer and harder to spoof, but also less
+  // convenient.
+  function generateId() {
+    return data.userId + '/' + drawingId++;
+  }
+
   document.getElementById('user-info').textContent = 'User ' + data.userId;
 
   document.getElementById('chat-input').addEventListener('change', (event) => {
@@ -49,11 +69,19 @@ conn.onconnected = (data) => {
   });
 
   document.getElementById('make-circle').addEventListener('click', (event) => {
+    let id = generateId();
     let info = {
-      x: Math.floor(50 + Math.random() * 200),
-      y: Math.floor(50 + Math.random() * 200),
+      id: id,
+      x: Math.floor(50 + Math.random() * (primary.width - 100)),
+      y: Math.floor(50 + Math.random() * (primary.height - 100)),
       radius: Math.floor(10 + Math.random() * 40),
     };
+
+    let working = createWorkingCanvas(primary, id);
+    let ctx = working.getContext('2d');
+    ctx.fillStyle = 'grey';
+    addCircle(ctx, info);
+
     conn.sendDrawing(info);
   });
 
@@ -61,8 +89,7 @@ conn.onconnected = (data) => {
     let img = new Image();
     img.src = data.image;
     img.onload = (event) => {
-      let canvas = document.getElementById('canvas').getContext('2d');
-      canvas.drawImage(img, 0, 0);
+      primary.getContext('2d').drawImage(img, 0, 0);
     };
   }
 
@@ -77,5 +104,12 @@ conn.onuserparted = addChatLine;
 conn.onchat = addChatLine;
 
 conn.ondrawing = (data) => {
-  addCircle(data.value);
+  let ctx = document.getElementById('primary-canvas').getContext('2d');
+  addCircle(ctx, data.value);
+
+  let working = document.querySelector(
+    '.working-canvas[data-id="' + data.value.id + '"]'
+  );
+  if (working)
+    working.parentNode.removeChild(working);
 };

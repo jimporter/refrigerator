@@ -9,9 +9,19 @@ body {
 }
 
 #canvas {
-  display: block;
+  display: inline-block;
   border: 1px solid grey;
   margin: 1em;
+}
+
+.working-canvas {
+  position: absolute;
+  display: block;
+  z-index: 1;
+}
+
+#primary-canvas {
+  display: block;
 }
 
 #make-circle {
