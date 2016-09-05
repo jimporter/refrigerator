@@ -61,6 +61,22 @@ conn.onconnected = (data) => {
     return data.userId + '/' + drawingId++;
   }
 
+  function drawPixel(event) {
+    let id = generateId();
+    let info = {
+      id: id,
+      x: event.clientX - primary.offsetLeft,
+      y: event.clientY - primary.offsetTop,
+      radius: 10
+    };
+
+    let working = createWorkingCanvas(primary, id);
+    let ctx = working.getContext('2d');
+    addCircle(ctx, info);
+
+    conn.sendDrawing(info);
+  }
+
   document.getElementById('user-info').textContent = 'User ' + data.userId;
 
   document.getElementById('chat-input').addEventListener('change', (event) => {
@@ -68,21 +84,22 @@ conn.onconnected = (data) => {
     event.target.value = '';
   });
 
-  document.getElementById('make-circle').addEventListener('click', (event) => {
-    let id = generateId();
-    let info = {
-      id: id,
-      x: Math.floor(50 + Math.random() * (primary.width - 100)),
-      y: Math.floor(50 + Math.random() * (primary.height - 100)),
-      radius: Math.floor(10 + Math.random() * 40),
-    };
+  let isDrawing = false;
 
-    let working = createWorkingCanvas(primary, id);
-    let ctx = working.getContext('2d');
-    ctx.fillStyle = 'grey';
-    addCircle(ctx, info);
+  primary.addEventListener('mousedown', (event) => {
+    isDrawing = true;
+    drawPixel(event);
+  });
 
-    conn.sendDrawing(info);
+  primary.addEventListener('mouseup', (event) => {
+    isDrawing = false;
+  });
+
+  primary.addEventListener('mousemove', (event) => {
+    // XXX: Draw a line segment from the previous dot so we don't get gaps.
+    // Also, batch these events together to reduce network bandwidth usage?
+    if (isDrawing)
+      drawPixel(event);
   });
 
   if ('image' in data) {

@@ -16,8 +16,12 @@ body {
 
 .working-canvas {
   position: absolute;
+  pointer-events: none;
   display: block;
   z-index: 1;
+  /* XXX: Remove this. It's just to make it more obvious which is a working
+     canvas. */
+  opacity: 0.1;
 }
 
 #primary-canvas {
