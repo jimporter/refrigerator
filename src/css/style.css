@@ -23,8 +23,11 @@ body {
 .working-canvas {
   position: absolute;
   pointer-events: none;
+  display: none;
+}
+
+.working-canvas.active {
   display: block;
-  z-index: 1;
 }
 
 #primary-canvas {

@@ -33,16 +33,52 @@ function addChatLine(data) {
   document.getElementById('scrollback').appendChild(line);
 }
 
-function createWorkingCanvas(primary, id) {
-  let working = document.createElement('canvas');
-  working.className = 'working-canvas';
-  working.dataset.id = id;
-  working.width = primary.width;
-  working.height = primary.height;
-
-  primary.parentNode.insertBefore(working, primary);
-  return working;
+function WorkingCanvasSet(primary, count) {
+  this._primary = primary;
+  this._canvases = [];
+  for (let i = 0; i != count; i++)
+    this._canvases.push(this._createCanvas());
 }
+
+WorkingCanvasSet.prototype = {
+  _createCanvas: function(temp) {
+    let working = document.createElement('canvas');
+    working.classList.add('working-canvas');
+    working.classList.toggle('temp', temp);
+    working.width = this._primary.width;
+    working.height = this._primary.height;
+
+    this._primary.parentNode.insertBefore(working, this._primary);
+    return working;
+  },
+
+  acquire: function(id) {
+    // XXX: Set z-index so this canvas is on top of all the others.
+    let canvas = this._canvases.length ? this._canvases.pop() :
+                                         this._createCanvas(true);
+    canvas.classList.add('active');
+    canvas.dataset.id = id;
+    return canvas;
+  },
+
+  release: function(canvas) {
+    if (canvas.classList.contains('temp')) {
+      canvas.parentNode.removeChild(canvas);
+      return;
+    }
+    canvas.classList.remove('active');
+    canvas.dataset.id = null;
+    let ctx = working.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);wq
+    this._canvases.push(canvas);
+  },
+
+  find: function(id) {
+    return this._primary.parentNode.querySelector(
+      '.working-canvas[data-id="' + id + '"]'
+    );
+  },
+};
 
 function addCircle(ctx, info) {
   ctx.fillStyle = info.color;
@@ -54,6 +90,7 @@ function addCircle(ctx, info) {
 conn.onconnected = (data) => {
   let primary = document.getElementById('primary-canvas');
   let drawingId = 0;
+  let workingSet = new WorkingCanvasSet(primary, 64);
 
   // XXX: Who should be responsible for the userId portion? The client (as it is
   // now) or the server? The latter is safer and harder to spoof, but also less
@@ -72,7 +109,7 @@ conn.onconnected = (data) => {
       color: document.getElementById('brush-color').value,
     };
 
-    let working = createWorkingCanvas(primary, id);
+    let working = workingSet.acquire(id);
     let ctx = working.getContext('2d');
     addCircle(ctx, info);
 
@@ -122,19 +159,17 @@ conn.onconnected = (data) => {
     for (let i of data.chat)
       addChatLine(i);
   }
-};
 
-conn.onuserjoined = addChatLine;
-conn.onuserparted = addChatLine;
-conn.onchat = addChatLine;
+  conn.onuserjoined = addChatLine;
+  conn.onuserparted = addChatLine;
+  conn.onchat = addChatLine;
 
-conn.ondrawing = (data) => {
-  let ctx = document.getElementById('primary-canvas').getContext('2d');
-  addCircle(ctx, data.value);
+  conn.ondrawing = (data) => {
+    let ctx = document.getElementById('primary-canvas').getContext('2d');
+    addCircle(ctx, data.value);
 
-  let working = document.querySelector(
-    '.working-canvas[data-id="' + data.value.id + '"]'
-  );
-  if (working)
-    working.parentNode.removeChild(working);
+    let working = workingSet.find(data.value.id);
+    if (working)
+      workingSet.release(working);
+  };
 };
