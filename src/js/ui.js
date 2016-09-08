@@ -2,35 +2,32 @@ function addChatLine(data) {
   let line = document.createElement('div');
   line.className = 'chat-line';
 
-  if (data.type === 'chat') {
+  let author = document.createElement('span');
+  author.className = 'chat-author';
+  author.textContent = 'user ' + data.userId;
+  line.appendChild(author);
 
-    let author = document.createElement('span');
-    author.className = 'chat-author';
-    author.textContent = 'user ' + data.userId;
-    line.appendChild(author);
-
-    let message = document.createElement('span');
-    message.className = 'chat-message';
-    message.textContent = ' ' + data.value;
-    line.appendChild(message);
-
-  } else if (data.type === 'userjoined') {
-
-    let message = document.createElement('span');
-    message.className = 'chat-server-log';
-    message.textContent = 'user ' + data.userId + ' joined';
-    line.appendChild(message);
-
-  } else if (data.type === 'userparted') {
-
-    let message = document.createElement('span');
-    message.className = 'chat-server-log';
-    message.textContent = 'user ' + data.userId + ' parted';
-    line.appendChild(message);
-
-  }
+  let message = document.createElement('span');
+  message.className = 'chat-message';
+  message.textContent = ' ' + data.value;
+  line.appendChild(message);
 
   document.getElementById('scrollback').appendChild(line);
+}
+
+function addUser(id) {
+  let user = document.createElement('div');
+  user.className = 'user-line';
+  user.dataset.id = id;
+  user.textContent = 'User ' + id;
+
+  document.getElementById('user-list').appendChild(user);
+}
+
+function removeUser(id) {
+  let list = document.getElementById('user-list');
+  let user = list.querySelector('.user-line[data-id="' + id + '"]');
+  list.removeChild(user);
 }
 
 function WorkingCanvasSet(primary, count) {
@@ -118,6 +115,12 @@ conn.onconnected = (data) => {
 
   document.getElementById('user-info').textContent = 'User ' + data.userId;
 
+  let userList = document.getElementById('user-list');
+  for (let user of data.users) {
+    if (user !== data.userId)
+      addUser(user);
+  }
+
   document.getElementById('chat-input').addEventListener('change', (event) => {
     conn.sendChat(event.target.value);
     event.target.value = '';
@@ -160,8 +163,8 @@ conn.onconnected = (data) => {
       addChatLine(i);
   }
 
-  conn.onuserjoined = addChatLine;
-  conn.onuserparted = addChatLine;
+  conn.onuserjoined = (data) => addUser(data.userId);
+  conn.onuserparted = (data) => removeUser(data.userId);
   conn.onchat = addChatLine;
 
   conn.ondrawing = (data) => {

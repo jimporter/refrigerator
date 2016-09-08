@@ -21,6 +21,7 @@ function fetchAndRespond(url, event) {
 function Server(canvas) {
   this._canvas = canvas;
   this._scrollback = [];
+  this._users = new Set();
   this._sockets = new Map();
 
   navigator.publishServer('Refrigerator').then((server) => {
@@ -39,15 +40,20 @@ function Server(canvas) {
       fetchAndRespond(url.substr(1), event);
     };
 
+    this._users.add(0); // The host user.
     let userId = 1;
+
     server.onwebsocket = (event) => {
       let socket = event.accept();
       socket.onopen = (event) => {
         var id = userId++;
         this._onmessage({type: 'userjoined'}, id);
+        this._users.add(id);
         this._sockets.set(socket, id);
         socket.send(JSON.stringify({
-          type: 'connected', userId: id,
+          type: 'connected',
+          userId: id,
+          users: Array.from(this._users),
           image: this._canvas.toDataURL(),
           chat: this._scrollback
         }));
@@ -56,6 +62,7 @@ function Server(canvas) {
         var id = this._sockets.get(socket);
         this._sockets.delete(socket);
         this._onmessage({type: 'userparted'}, id);
+        this._users.delete(id);
       };
       socket.onmessage = (event) => {
         this._onmessage(
@@ -64,8 +71,13 @@ function Server(canvas) {
       };
     };
 
-    if (this.onconnected)
-      this.onconnected({type: 'connected', userId: 0});
+    if (this.onconnected) {
+      this.onconnected({
+        type: 'connected',
+        userId: 0,
+        users: Array.from(this._users),
+      });
+    }
 
   }).catch((e) => {
     console.log('failed to publish server', e);
@@ -90,7 +102,7 @@ Server.prototype = {
     data.userId = userId;
 
     // XXX: This should probably be abstracted somehow.
-    if (['chat', 'userjoined', 'userparted'].indexOf(data.type) !== -1)
+    if (data.type === 'chat')
       this._scrollback.push(data);
 
     let handler = 'on' + data.type;
