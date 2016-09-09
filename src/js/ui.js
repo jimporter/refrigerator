@@ -126,21 +126,15 @@ conn.onconnected = (data) => {
     event.target.value = '';
   });
 
-  let isDrawing = false;
-
   primary.addEventListener('mousedown', (event) => {
-    isDrawing = true;
-    drawPixel(event);
-  });
-
-  primary.addEventListener('mouseup', (event) => {
-    isDrawing = false;
+    if (event.buttons & 0x01)
+      drawPixel(event);
   });
 
   primary.addEventListener('mousemove', (event) => {
     // XXX: Draw a line segment from the previous dot so we don't get gaps.
     // Also, batch these events together to reduce network bandwidth usage?
-    if (isDrawing)
+    if (event.buttons & 0x01)
       drawPixel(event);
   });
 
