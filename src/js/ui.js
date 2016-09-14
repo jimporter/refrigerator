@@ -1,25 +1,25 @@
-function addChatLine(data) {
+function addChatLine(name, text) {
   let line = document.createElement('div');
   line.className = 'chat-line';
 
   let author = document.createElement('span');
   author.className = 'chat-author';
-  author.textContent = 'user ' + data.userId;
+  author.textContent = name;
   line.appendChild(author);
 
   let message = document.createElement('span');
   message.className = 'chat-message';
-  message.textContent = ' ' + data.value;
+  message.textContent = ' ' + text;
   line.appendChild(message);
 
   document.getElementById('scrollback').appendChild(line);
 }
 
-function addUser(id) {
+function addUser(info) {
   let user = document.createElement('div');
   user.className = 'user-line';
-  user.dataset.id = id;
-  user.textContent = 'User ' + id;
+  user.dataset.id = info.id;
+  user.textContent = info.name;
 
   document.getElementById('user-list').appendChild(user);
 }
@@ -88,6 +88,7 @@ conn.onconnected = (data) => {
   let primary = document.getElementById('primary-canvas');
   let drawingId = 0;
   let workingSet = new WorkingCanvasSet(primary, 64);
+  let users = new Map();
 
   // XXX: Who should be responsible for the userId portion? The client (as it is
   // now) or the server? The latter is safer and harder to spoof, but also less
@@ -113,11 +114,12 @@ conn.onconnected = (data) => {
     conn.sendDrawing(info);
   }
 
-  document.getElementById('user-info').textContent = 'User ' + data.userId;
+  document.getElementById('user-info').textContent = data.userInfo.name;
 
   let userList = document.getElementById('user-list');
   for (let user of data.users) {
-    if (user !== data.userId)
+    users.set(user.id, user);
+    if (user.id !== data.userInfo.id)
       addUser(user);
   }
 
@@ -154,12 +156,22 @@ conn.onconnected = (data) => {
 
   if ('chat' in data) {
     for (let i of data.chat)
-      addChatLine(i);
+      addChatLine(users.get(i.userId).name, i.value);
   }
 
-  conn.onuserjoined = (data) => addUser(data.userId);
-  conn.onuserparted = (data) => removeUser(data.userId);
-  conn.onchat = addChatLine;
+  conn.onuserjoined = (data) => {
+    users.set(data.userInfo.id, data.userInfo);
+    addUser(data.userInfo);
+  };
+
+  conn.onuserparted = (data) => {
+    users.delete(data.userId);
+    removeUser(data.userId);
+  };
+
+  conn.onchat = (data) => {
+    addChatLine(users.get(data.userId).name, data.value);
+  };
 
   conn.ondrawing = (data) => {
     let ctx = document.getElementById('primary-canvas').getContext('2d');

@@ -21,7 +21,8 @@ function fetchAndRespond(url, event) {
 function Server(canvas) {
   this._canvas = canvas;
   this._scrollback = [];
-  this._users = new Set();
+  this._nextUserId = 0;
+  this._users = new Map();
   this._sockets = new Map();
 
   navigator.publishServer('Refrigerator').then((server) => {
@@ -40,20 +41,20 @@ function Server(canvas) {
       fetchAndRespond(url.substr(1), event);
     };
 
-    this._users.add(0); // The host user.
-    let userId = 1;
+    let hostUser = this._makeUser();
+    this._users.set(hostUser.id, hostUser);
 
     server.onwebsocket = (event) => {
       let socket = event.accept();
       socket.onopen = (event) => {
-        var id = userId++;
-        this._onmessage({type: 'userjoined'}, id);
-        this._users.add(id);
-        this._sockets.set(socket, id);
+        var user = this._makeUser();
+        this._onmessage({type: 'userjoined', userInfo: user}, user.id);
+        this._users.set(user.id, user);
+        this._sockets.set(socket, user.id);
         socket.send(JSON.stringify({
           type: 'connected',
-          userId: id,
-          users: Array.from(this._users),
+          userInfo: user,
+          users: [...this._users.values()],
           image: this._canvas.toDataURL(),
           chat: this._scrollback
         }));
@@ -74,8 +75,8 @@ function Server(canvas) {
     if (this.onconnected) {
       this.onconnected({
         type: 'connected',
-        userId: 0,
-        users: Array.from(this._users),
+        userInfo: hostUser,
+        users: [...this._users.values()],
       });
     }
 
@@ -89,6 +90,14 @@ Server.prototype = {
   onuserjoined: null,
   onuserparted: null,
   onchat: null,
+
+  _makeUser: function() {
+    let id = this._nextUserId++;
+    return {
+      id: id,
+      name: 'User ' + id,
+    };
+  },
 
   _relay: function(data) {
     var string = JSON.stringify(data);
