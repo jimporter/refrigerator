@@ -38,6 +38,11 @@ body {
   display: flex;
 }
 
+#toolbar > * {
+  margin: 0.25em;
+  height: 1.5rem;
+}
+
 #chat {
   display: flex;
   flex-direction: column;
