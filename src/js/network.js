@@ -90,6 +90,7 @@ Server.prototype = {
   onuserjoined: null,
   onuserparted: null,
   onchat: null,
+  onnamechange: null,
 
   _makeUser: function() {
     let id = this._nextUserId++;
@@ -97,6 +98,13 @@ Server.prototype = {
       id: id,
       name: 'User ' + id,
     };
+  },
+
+  _findUserByName: function(name) {
+    for (let i of this._users.values()) {
+      if (i.name === name)
+        return i;
+    }
   },
 
   _relay: function(data) {
@@ -111,8 +119,15 @@ Server.prototype = {
     data.userId = userId;
 
     // XXX: This should probably be abstracted somehow.
-    if (data.type === 'chat')
+    if (data.type === 'chat') {
       this._scrollback.push(data);
+    } else if (data.type === 'namechange') {
+      if (this._findUserByName(data.value)) {
+        // XXX: Alert the user that this name is taken.
+        return;
+      }
+      this._users.get(userId).name = data.value;
+    }
 
     let handler = 'on' + data.type;
     if (this[handler])
@@ -126,6 +141,10 @@ Server.prototype = {
 
   sendDrawing: function(info) {
     this._onmessage({type: 'drawing', value: info}, 0);
+  },
+
+  sendNameChange: function(name) {
+    this._onmessage({type: 'namechange', value: name}, 0);
   },
 };
 

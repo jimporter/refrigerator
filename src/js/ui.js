@@ -1,9 +1,10 @@
-function addChatLine(name, text) {
+function addChatLine(name, userId, text) {
   let line = document.createElement('div');
   line.className = 'chat-line';
 
   let author = document.createElement('span');
   author.className = 'chat-author';
+  author.dataset.userId = userId;
   author.textContent = name;
   line.appendChild(author);
 
@@ -13,6 +14,14 @@ function addChatLine(name, text) {
   line.appendChild(message);
 
   document.getElementById('scrollback').appendChild(line);
+}
+
+function updateChatLines(userId, name) {
+  let lines = document.getElementById('scrollback').querySelectorAll(
+    '.chat-author[data-user-id="' + userId + '"]'
+  );
+  for (let i of lines)
+    i.textContent = name;
 }
 
 function addUser(info) {
@@ -29,6 +38,12 @@ function removeUser(id) {
   let user = list.querySelector('.user-line[data-id="' + id + '"]');
   list.removeChild(user);
 }
+
+function updateUser(info) {
+  let list = document.getElementById('user-list');
+  let user = list.querySelector('.user-line[data-id="' + info.id + '"]');
+  user.textContent = info.name;
+};
 
 function WorkingCanvasSet(primary, count) {
   this._primary = primary;
@@ -89,6 +104,7 @@ conn.onconnected = (data) => {
   let drawingId = 0;
   let workingSet = new WorkingCanvasSet(primary, 64);
   let users = new Map();
+  let myUserId = data.userInfo.id;
 
   // XXX: Who should be responsible for the userId portion? The client (as it is
   // now) or the server? The latter is safer and harder to spoof, but also less
@@ -115,11 +131,16 @@ conn.onconnected = (data) => {
   }
 
   document.getElementById('user-info').textContent = data.userInfo.name;
+  document.getElementById('user-info').addEventListener('click', (event) => {
+    let name = prompt('Enter new name', event.target.textContent);
+    if (name)
+      conn.sendNameChange(name);
+  });
 
   let userList = document.getElementById('user-list');
   for (let user of data.users) {
     users.set(user.id, user);
-    if (user.id !== data.userInfo.id)
+    if (user.id !== myUserId)
       addUser(user);
   }
 
@@ -156,7 +177,7 @@ conn.onconnected = (data) => {
 
   if ('chat' in data) {
     for (let i of data.chat)
-      addChatLine(users.get(i.userId).name, i.value);
+      addChatLine(users.get(i.userId).name, i.userId, i.value);
   }
 
   conn.onuserjoined = (data) => {
@@ -170,7 +191,7 @@ conn.onconnected = (data) => {
   };
 
   conn.onchat = (data) => {
-    addChatLine(users.get(data.userId).name, data.value);
+    addChatLine(users.get(data.userId).name, data.userId, data.value);
   };
 
   conn.ondrawing = (data) => {
@@ -180,5 +201,13 @@ conn.onconnected = (data) => {
     let working = workingSet.find(data.value.id);
     if (working)
       workingSet.release(working);
+  };
+
+  conn.onnamechange = (data) => {
+    if (data.userId === myUserId)
+      document.getElementById('user-info').textContent = data.value;
+    else
+      updateUser({id: data.userId, name: data.value});
+    updateChatLines(data.userId, data.value);
   };
 };

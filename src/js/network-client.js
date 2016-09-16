@@ -10,6 +10,7 @@ Client.prototype = {
   onuserjoined: null,
   onuserparted: null,
   onchat: null,
+  onnamechange: null,
 
   _onmessage: function(data) {
     let handler = 'on' + data.type;
@@ -23,6 +24,10 @@ Client.prototype = {
 
   sendDrawing: function(info) {
     this._socket.send(JSON.stringify({type: 'drawing', value: info}));
+  },
+
+  sendNameChange: function(name) {
+    this._socket.send(JSON.stringify({type: 'namechange', value: name}));
   },
 };
 
