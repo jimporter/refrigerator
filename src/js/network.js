@@ -49,8 +49,11 @@ function Server(canvas) {
       socket.onopen = (event) => {
         var user = this._makeUser();
         this._broadcast({type: 'userjoined', userInfo: user, userId: user.id});
+
+        socket.userId = user.id;
+        this._sockets.set(user.id, socket);
         this._users.set(user.id, user);
-        this._sockets.set(socket, user.id);
+
         socket.send(JSON.stringify({
           type: 'connected',
           userInfo: user,
@@ -60,15 +63,12 @@ function Server(canvas) {
         }));
       };
       socket.onclose = (event) => {
-        var id = this._sockets.get(socket);
-        this._sockets.delete(socket);
-        this._broadcast({type: 'userparted', userId: id});
-        this._users.delete(id);
+        this._sockets.delete(socket.userId);
+        this._users.delete(socket.userId);
+        this._broadcast({type: 'userparted', userId: socket.userId});
       };
       socket.onmessage = (event) => {
-        this._processMessage(
-          JSON.parse(event.data), this._sockets.get(socket)
-        );
+        this._processMessage(JSON.parse(event.data), socket.userId);
       };
     };
 
@@ -101,11 +101,18 @@ Server.prototype._findUserByName = function(name) {
   }
 };
 
+Server.prototype._send = function(data, userId) {
+  if (userId === 0)
+    this._onmessage(data);
+  else
+    this._sockets.get(userId).send(JSON.stringify(data));
+};
+
 Server.prototype._broadcast = function(data) {
   this._onmessage(data);
 
   var string = JSON.stringify(data);
-  for (let [socket, id] of this._sockets)
+  for (let socket of this._sockets.values())
     socket.send(string);
 };
 
@@ -117,15 +124,20 @@ Server.prototype._processMessage = function(data, userId) {
   // XXX: This should probably be abstracted somehow.
   if (data.type === 'chat') {
     this._scrollback.push(data);
+    this._broadcast(data);
   } else if (data.type === 'namechange') {
-    if (this._findUserByName(data.value)) {
-      // XXX: Alert the user that this name is taken.
-      return;
+    let found = this._findUserByName(data.value);
+    if (found && found.id !== userId) {
+      this._send({type: 'error', value: 'namechangefailed'}, userId);
+    } else {
+      let user = this._users.get(userId);
+      user.name = data.value;
+      this._broadcast({type: 'namechange', userInfo: user, userId: userId});
     }
-    this._users.get(userId).name = data.value;
+  } else {
+    // Other messages just get passed through without any special processing.
+    this._broadcast(data);
   }
-
-  this._broadcast(data);
 };
 
 Server.prototype._sendMessage = function(data) {

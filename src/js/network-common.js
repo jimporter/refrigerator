@@ -6,6 +6,7 @@ Connection.prototype = {
   onuserparted: null,
   onchat: null,
   onnamechange: null,
+  onerror: null,
 
   _sendMessage: null,
 

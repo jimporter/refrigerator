@@ -1,12 +1,12 @@
 var ChatLog = {
-  addLine: function(name, userId, text) {
+  addLine: function(userInfo, text) {
     let line = document.createElement('div');
     line.className = 'chat-line';
 
     let author = document.createElement('span');
     author.className = 'chat-author';
-    author.dataset.userId = userId;
-    author.textContent = name;
+    author.dataset.userId = userInfo.id;
+    author.textContent = userInfo.name;
     line.appendChild(author);
 
     let message = document.createElement('span');
@@ -17,12 +17,12 @@ var ChatLog = {
     document.getElementById('scrollback').appendChild(line);
   },
 
-  updateLines: function(userId, name) {
+  updateLines: function(userInfo) {
     let lines = document.getElementById('scrollback').querySelectorAll(
-      '.chat-author[data-user-id="' + userId + '"]'
+      '.chat-author[data-user-id="' + userInfo.id + '"]'
     );
     for (let i of lines)
-      i.textContent = name;
+      i.textContent = userInfo.name;
   },
 };
 
@@ -181,7 +181,7 @@ conn.onconnected = (data) => {
 
   if ('chat' in data) {
     for (let i of data.chat)
-      ChatLog.addLine(users.get(i.userId).name, i.userId, i.value);
+      ChatLog.addLine(users.get(i.userId), i.value);
   }
 
   conn.onuserjoined = (data) => {
@@ -195,7 +195,7 @@ conn.onconnected = (data) => {
   };
 
   conn.onchat = (data) => {
-    ChatLog.addLine(users.get(data.userId).name, data.userId, data.value);
+    ChatLog.addLine(users.get(data.userId), data.value);
   };
 
   conn.ondrawing = (data) => {
@@ -208,11 +208,16 @@ conn.onconnected = (data) => {
   };
 
   conn.onnamechange = (data) => {
-    if (data.userId === myUserId)
-      document.getElementById('user-info').textContent = data.value;
+    if (data.userInfo.id === myUserId)
+      document.getElementById('user-info').textContent = data.userInfo.name;
     else
-      UserList.update({id: data.userId, name: data.value});
-    ChatLog.updateLines(data.userId, data.value);
-    users.set(data.userId, {id: data.userId, name: data.value});
+      UserList.update(data.userInfo);
+    ChatLog.updateLines(data.userInfo);
+    users.set(data.userId, data.userInfo);
+  };
+
+  conn.onerror = (data) => {
+    if (data.value === 'namechangefailed')
+      alert('That name is already in use.');
   };
 };
