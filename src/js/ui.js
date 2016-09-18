@@ -1,48 +1,52 @@
-function addChatLine(name, userId, text) {
-  let line = document.createElement('div');
-  line.className = 'chat-line';
+var ChatLog = {
+  addLine: function(name, userId, text) {
+    let line = document.createElement('div');
+    line.className = 'chat-line';
 
-  let author = document.createElement('span');
-  author.className = 'chat-author';
-  author.dataset.userId = userId;
-  author.textContent = name;
-  line.appendChild(author);
+    let author = document.createElement('span');
+    author.className = 'chat-author';
+    author.dataset.userId = userId;
+    author.textContent = name;
+    line.appendChild(author);
 
-  let message = document.createElement('span');
-  message.className = 'chat-message';
-  message.textContent = ' ' + text;
-  line.appendChild(message);
+    let message = document.createElement('span');
+    message.className = 'chat-message';
+    message.textContent = ' ' + text;
+    line.appendChild(message);
 
-  document.getElementById('scrollback').appendChild(line);
-}
+    document.getElementById('scrollback').appendChild(line);
+  },
 
-function updateChatLines(userId, name) {
-  let lines = document.getElementById('scrollback').querySelectorAll(
-    '.chat-author[data-user-id="' + userId + '"]'
-  );
-  for (let i of lines)
-    i.textContent = name;
-}
+  updateLines: function(userId, name) {
+    let lines = document.getElementById('scrollback').querySelectorAll(
+      '.chat-author[data-user-id="' + userId + '"]'
+    );
+    for (let i of lines)
+      i.textContent = name;
+  },
+};
 
-function addUser(info) {
-  let user = document.createElement('div');
-  user.className = 'user-line';
-  user.dataset.id = info.id;
-  user.textContent = info.name;
+var UserList = {
+  add: function(info) {
+    let user = document.createElement('div');
+    user.className = 'user-line';
+    user.dataset.id = info.id;
+    user.textContent = info.name;
 
-  document.getElementById('user-list').appendChild(user);
-}
+    document.getElementById('user-list').appendChild(user);
+  },
 
-function removeUser(id) {
-  let list = document.getElementById('user-list');
-  let user = list.querySelector('.user-line[data-id="' + id + '"]');
-  list.removeChild(user);
-}
+  remove: function(id) {
+    let list = document.getElementById('user-list');
+    let user = list.querySelector('.user-line[data-id="' + id + '"]');
+    list.removeChild(user);
+  },
 
-function updateUser(info) {
-  let list = document.getElementById('user-list');
-  let user = list.querySelector('.user-line[data-id="' + info.id + '"]');
-  user.textContent = info.name;
+  update: function(info) {
+    let list = document.getElementById('user-list');
+    let user = list.querySelector('.user-line[data-id="' + info.id + '"]');
+    user.textContent = info.name;
+  },
 };
 
 function WorkingCanvasSet(primary, count) {
@@ -141,7 +145,7 @@ conn.onconnected = (data) => {
   for (let user of data.users) {
     users.set(user.id, user);
     if (user.id !== myUserId)
-      addUser(user);
+      UserList.add(user);
   }
 
   document.getElementById('chat-input').addEventListener('change', (event) => {
@@ -177,21 +181,21 @@ conn.onconnected = (data) => {
 
   if ('chat' in data) {
     for (let i of data.chat)
-      addChatLine(users.get(i.userId).name, i.userId, i.value);
+      ChatLog.addLine(users.get(i.userId).name, i.userId, i.value);
   }
 
   conn.onuserjoined = (data) => {
     users.set(data.userInfo.id, data.userInfo);
-    addUser(data.userInfo);
+    UserList.add(data.userInfo);
   };
 
   conn.onuserparted = (data) => {
     users.delete(data.userId);
-    removeUser(data.userId);
+    UserList.remove(data.userId);
   };
 
   conn.onchat = (data) => {
-    addChatLine(users.get(data.userId).name, data.userId, data.value);
+    ChatLog.addLine(users.get(data.userId).name, data.userId, data.value);
   };
 
   conn.ondrawing = (data) => {
@@ -207,7 +211,7 @@ conn.onconnected = (data) => {
     if (data.userId === myUserId)
       document.getElementById('user-info').textContent = data.value;
     else
-      updateUser({id: data.userId, name: data.value});
-    updateChatLines(data.userId, data.value);
+      UserList.update({id: data.userId, name: data.value});
+    ChatLog.updateLines(data.userId, data.value);
   };
 };
