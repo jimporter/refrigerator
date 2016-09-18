@@ -48,7 +48,7 @@ function Server(canvas) {
       let socket = event.accept();
       socket.onopen = (event) => {
         var user = this._makeUser();
-        this._onmessage({type: 'userjoined', userInfo: user}, user.id);
+        this._broadcast({type: 'userjoined', userInfo: user, userId: user.id});
         this._users.set(user.id, user);
         this._sockets.set(socket, user.id);
         socket.send(JSON.stringify({
@@ -62,90 +62,74 @@ function Server(canvas) {
       socket.onclose = (event) => {
         var id = this._sockets.get(socket);
         this._sockets.delete(socket);
-        this._onmessage({type: 'userparted'}, id);
+        this._broadcast({type: 'userparted', userId: id});
         this._users.delete(id);
       };
       socket.onmessage = (event) => {
-        this._onmessage(
+        this._processMessage(
           JSON.parse(event.data), this._sockets.get(socket)
         );
       };
     };
 
-    if (this.onconnected) {
-      this.onconnected({
-        type: 'connected',
-        userInfo: hostUser,
-        users: [...this._users.values()],
-      });
-    }
+    this._onmessage({
+      type: 'connected',
+      userInfo: hostUser,
+      users: [...this._users.values()],
+    });
 
   }).catch((e) => {
     console.log('failed to publish server', e);
   });
 }
 
-Server.prototype = {
-  onconnected: null,
-  onuserjoined: null,
-  onuserparted: null,
-  onchat: null,
-  onnamechange: null,
+Server.prototype = Object.create(Connection.prototype);
+Server.prototype.constructor = Server;
 
-  _makeUser: function() {
-    let id = this._nextUserId++;
-    return {
-      id: id,
-      name: 'User ' + id,
-    };
-  },
+Server.prototype._makeUser = function() {
+  let id = this._nextUserId++;
+  return {
+    id: id,
+    name: 'User ' + id,
+  };
+};
 
-  _findUserByName: function(name) {
-    for (let i of this._users.values()) {
-      if (i.name === name)
-        return i;
+Server.prototype._findUserByName = function(name) {
+  for (let i of this._users.values()) {
+    if (i.name === name)
+      return i;
+  }
+};
+
+Server.prototype._broadcast = function(data) {
+  this._onmessage(data);
+
+  var string = JSON.stringify(data);
+  for (let [socket, id] of this._sockets)
+    socket.send(string);
+};
+
+// Handle an incoming message, route it to the right event handler, and relay
+// it to the clients.
+Server.prototype._processMessage = function(data, userId) {
+  data.userId = userId;
+
+  // XXX: This should probably be abstracted somehow.
+  if (data.type === 'chat') {
+    this._scrollback.push(data);
+  } else if (data.type === 'namechange') {
+    if (this._findUserByName(data.value)) {
+      // XXX: Alert the user that this name is taken.
+      return;
     }
-  },
+    this._users.get(userId).name = data.value;
+  }
 
-  _relay: function(data) {
-    var string = JSON.stringify(data);
-    for (let [socket, id] of this._sockets)
-      socket.send(string);
-  },
+  this._broadcast(data);
+};
 
-  // Handle an incoming message, route it to the right event handler, and relay
-  // it to the clients.
-  _onmessage: function(data, userId) {
-    data.userId = userId;
-
-    // XXX: This should probably be abstracted somehow.
-    if (data.type === 'chat') {
-      this._scrollback.push(data);
-    } else if (data.type === 'namechange') {
-      if (this._findUserByName(data.value)) {
-        // XXX: Alert the user that this name is taken.
-        return;
-      }
-      this._users.get(userId).name = data.value;
-    }
-
-    let handler = 'on' + data.type;
-    if (this[handler])
-      this[handler](data);
-    this._relay(data);
-  },
-
-  sendChat: function(message) {
-    this._onmessage({type: 'chat', value: message}, 0);
-  },
-
-  sendDrawing: function(info) {
-    this._onmessage({type: 'drawing', value: info}, 0);
-  },
-
-  sendNameChange: function(name) {
-    this._onmessage({type: 'namechange', value: name}, 0);
-  },
+Server.prototype._sendMessage = function(data) {
+  this._processMessage(data, 0);
 };
 
 let conn = new Server(document.getElementById('primary-canvas'));

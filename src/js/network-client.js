@@ -5,30 +5,11 @@ function Client() {
   };
 }
 
-Client.prototype = {
-  onconnected: null,
-  onuserjoined: null,
-  onuserparted: null,
-  onchat: null,
-  onnamechange: null,
+Client.prototype = Object.create(Connection.prototype);
+Client.prototype.constructor = Client;
 
-  _onmessage: function(data) {
-    let handler = 'on' + data.type;
-    if (this[handler])
-      this[handler](data);
-  },
-
-  sendChat: function(message) {
-    this._socket.send(JSON.stringify({type: 'chat', value: message}));
-  },
-
-  sendDrawing: function(info) {
-    this._socket.send(JSON.stringify({type: 'drawing', value: info}));
-  },
-
-  sendNameChange: function(name) {
-    this._socket.send(JSON.stringify({type: 'namechange', value: name}));
-  },
+Client.prototype._sendMessage = function(data) {
+  this._socket.send(JSON.stringify(data));
 };
 
 let conn = new Client();
