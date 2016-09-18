@@ -96,11 +96,15 @@ WorkingCanvasSet.prototype = {
   },
 };
 
-function addCircle(ctx, info) {
-  ctx.fillStyle = info.color;
+function drawSegment(ctx, info) {
+  ctx.strokeStyle = info.color;
+  ctx.lineWidth = info.radius;
+  ctx.lineCap = 'round';
+
   ctx.beginPath();
-  ctx.arc(info.x, info.y, info.radius, 0, Math.PI*2);
-  ctx.fill();
+  ctx.moveTo(info.start.x, info.start.y);
+  ctx.lineTo(info.end.x, info.end.y);
+  ctx.stroke();
 }
 
 conn.onconnected = (data) => {
@@ -117,21 +121,26 @@ conn.onconnected = (data) => {
     return data.userId + '/' + drawingId++;
   }
 
-  function drawPixel(event) {
+  function makeSegment(event, start) {
     let id = generateId();
-    let info = {
-      id: id,
+    let end = {
       x: event.layerX - primary.offsetLeft,
       y: event.layerY - primary.offsetTop,
+    };
+    let info = {
+      id: id,
+      start: start || end,
+      end: end,
       radius: parseInt(document.getElementById('brush-size').value),
       color: document.getElementById('brush-color').value,
     };
 
     let working = workingSet.acquire(id);
     let ctx = working.getContext('2d');
-    addCircle(ctx, info);
-
+    drawSegment(ctx, info);
     conn.sendDrawing(info);
+
+    return end;
   }
 
   document.getElementById('user-info').textContent = data.userInfo.name;
@@ -153,17 +162,24 @@ conn.onconnected = (data) => {
     event.target.value = '';
   });
 
+  let prevCoords = null;
+
   primary.addEventListener('mousedown', (event) => {
     if (event.buttons & 0x01)
-      drawPixel(event);
+      prevCoords = makeSegment(event);
   });
 
   primary.addEventListener('mousemove', (event) => {
     // XXX: Draw a line segment from the previous dot so we don't get gaps.
     // Also, batch these events together to reduce network bandwidth usage?
     if (event.buttons & 0x01)
-      drawPixel(event);
+      prevCoords = makeSegment(event, prevCoords);
   });
+
+  primary.addEventListener('mouseup', (event) => {
+    prevCoords = null;
+  });
+
 
   if ('image' in data) {
     let img = new Image();
@@ -200,7 +216,7 @@ conn.onconnected = (data) => {
 
   conn.ondrawing = (data) => {
     let ctx = document.getElementById('primary-canvas').getContext('2d');
-    addCircle(ctx, data.value);
+    drawSegment(ctx, data.value);
 
     let working = workingSet.find(data.value.id);
     if (working)
