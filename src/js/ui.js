@@ -213,5 +213,6 @@ conn.onconnected = (data) => {
     else
       UserList.update({id: data.userId, name: data.value});
     ChatLog.updateLines(data.userId, data.value);
+    users.set(data.userId, {id: data.userId, name: data.value});
   };
 };
