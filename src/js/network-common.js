@@ -6,6 +6,8 @@ Connection.prototype = {
   onuserparted: null,
   onchat: null,
   onnamechange: null,
+  ondrawing: null,
+  onclear: null,
   onerror: null,
 
   _sendMessage: null,
@@ -22,6 +24,10 @@ Connection.prototype = {
 
   sendDrawing: function(info) {
     this._sendMessage({type: 'drawing', value: info});
+  },
+
+  sendClear: function(info) {
+    this._sendMessage({type: 'clear'});
   },
 
   sendNameChange: function(name) {

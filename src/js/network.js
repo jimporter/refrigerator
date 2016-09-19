@@ -123,9 +123,12 @@ Server.prototype._processMessage = function(data, userId) {
 
   // XXX: This should probably be abstracted somehow.
   if (data.type === 'chat') {
+
     this._scrollback.push(data);
     this._broadcast(data);
+
   } else if (data.type === 'namechange') {
+
     let found = this._findUserByName(data.value);
     if (found && found.id !== userId) {
       this._send({type: 'error', value: 'namechangefailed'}, userId);
@@ -134,9 +137,18 @@ Server.prototype._processMessage = function(data, userId) {
       user.name = data.value;
       this._broadcast({type: 'namechange', userInfo: user, userId: userId});
     }
+
+  } else if (data.type === 'clear') {
+
+    this._scrollback = [];
+    // The UI will handle clearing the canvas.
+    this._broadcast(data);
+
   } else {
+
     // Other messages just get passed through without any special processing.
     this._broadcast(data);
+
   }
 };
 

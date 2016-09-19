@@ -24,6 +24,10 @@ var ChatLog = {
     for (let i of lines)
       i.textContent = userInfo.name;
   },
+
+  clear: function() {
+    document.getElementById('scrollback').textContent = '';
+  },
 };
 
 var UserList = {
@@ -85,7 +89,7 @@ WorkingCanvasSet.prototype = {
     canvas.classList.remove('active');
     canvas.dataset.id = null;
     let ctx = working.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);wq
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     this._canvases.push(canvas);
   },
 
@@ -106,6 +110,10 @@ function drawSegment(ctx, info) {
   ctx.lineTo(info.end.x, info.end.y);
   ctx.stroke();
 }
+
+document.getElementById('user-info').addEventListener('click', (event) => {
+  document.getElementById('chat').classList.toggle('hidden');
+});
 
 conn.onconnected = (data) => {
   let primary = document.getElementById('primary-canvas');
@@ -144,9 +152,6 @@ conn.onconnected = (data) => {
   }
 
   document.getElementById('user-name').textContent = data.userInfo.name;
-  document.getElementById('user-info').addEventListener('click', (event) => {
-    document.getElementById('chat').classList.toggle('hidden');
-  });
   document.getElementById('change-name').addEventListener('click', (event) => {
     let currentName = document.getElementById('user-name').textContent;
     let name = prompt('Enter new name', currentName);
@@ -167,6 +172,11 @@ conn.onconnected = (data) => {
     event.target.value = '';
   });
 
+  document.getElementById('new-drawing').addEventListener('click', (event) => {
+    if (confirm('Are you sure?'))
+      conn.sendClear();
+  });
+
   let prevCoords = null;
 
   primary.addEventListener('mousedown', (event) => {
@@ -175,8 +185,7 @@ conn.onconnected = (data) => {
   });
 
   primary.addEventListener('mousemove', (event) => {
-    // XXX: Draw a line segment from the previous dot so we don't get gaps.
-    // Also, batch these events together to reduce network bandwidth usage?
+    // XXX: Batch these events together to reduce network bandwidth usage?
     if (event.buttons & 0x01)
       prevCoords = makeSegment(event, prevCoords);
   });
@@ -219,6 +228,15 @@ conn.onconnected = (data) => {
     ChatLog.addLine(users.get(data.userId), data.value);
   };
 
+  conn.onnamechange = (data) => {
+    if (data.userInfo.id === myUserId)
+      document.getElementById('user-name').textContent = data.userInfo.name;
+    else
+      UserList.update(data.userInfo);
+    ChatLog.updateLines(data.userInfo);
+    users.set(data.userId, data.userInfo);
+  };
+
   conn.ondrawing = (data) => {
     let ctx = document.getElementById('primary-canvas').getContext('2d');
     drawSegment(ctx, data.value);
@@ -228,13 +246,14 @@ conn.onconnected = (data) => {
       workingSet.release(working);
   };
 
-  conn.onnamechange = (data) => {
-    if (data.userInfo.id === myUserId)
-      document.getElementById('user-name').textContent = data.userInfo.name;
-    else
-      UserList.update(data.userInfo);
-    ChatLog.updateLines(data.userInfo);
-    users.set(data.userId, data.userInfo);
+  conn.onclear = () => {
+    let canvas = document.getElementById('primary-canvas');
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, primary.width, primary.height);
+    ctx.fillStyle = 'black';
+
+    ChatLog.clear();
   };
 
   conn.onerror = (data) => {

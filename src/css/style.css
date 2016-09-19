@@ -13,7 +13,8 @@ body {
 }
 
 #toolbar > select,
-#toolbar > input {
+#toolbar > input,
+#toolbar > button {
   margin: 0.1rem;
   height: 1.5rem;
 }
@@ -29,6 +30,12 @@ body {
   flex: 1;
 }
 
+.splitter {
+  border-left: 1px solid grey;
+  height: 100%;
+  margin: 0.1rem;
+}
+
 #content {
   display: flex;
   flex: 1;
@@ -41,6 +48,7 @@ body {
   align-items: center;
   justify-content: center;
   background-color: lightgrey;
+  overflow: auto;
 }
 
 #canvas {
