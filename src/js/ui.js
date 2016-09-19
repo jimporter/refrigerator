@@ -111,8 +111,19 @@ function drawSegment(ctx, info) {
   ctx.stroke();
 }
 
+function zoomCanvas(container, ratio) {
+  for (let i of container.getElementsByTagName('canvas')) {
+    i.style.width = i.width * ratio + 'px';
+    i.style.height = i.height * ratio + 'px';
+  }
+}
+
 document.getElementById('user-info').addEventListener('click', (event) => {
   document.getElementById('chat').classList.toggle('hidden');
+});
+
+document.getElementById('zoom').addEventListener('change', (event) => {
+  zoomCanvas(document.getElementById('canvas'), parseFloat(event.target.value));
 });
 
 conn.onconnected = (data) => {
@@ -130,8 +141,8 @@ conn.onconnected = (data) => {
     let id = generateId();
     let rect = primary.getBoundingClientRect();
     let end = {
-      x: event.pageX - rect.left,
-      y: event.pageY - rect.top,
+      x: (event.pageX - rect.left) * (primary.width / rect.width),
+      y: (event.pageY - rect.top) * (primary.height / rect.height),
     };
     let info = {
       localId: id,
