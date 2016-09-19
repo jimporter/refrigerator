@@ -8,26 +8,32 @@
     <link rel="stylesheet" href="css/style.css">
   </head>
   <body>
-    <main id="drawing">
-      <section id="canvas">
-        <canvas id="primary-canvas" width="600" height="600"></canvas>
-      </section>
-      <section id="toolbar">
-        <select id="brush-size">
-          <option value="1">tiny</option>
-          <option value="2">small</option>
-          <option value="5" selected>medium</option>
-          <option value="10">large</option>
-          <option value="20">huge</option>
-        </select>
-        <input type="color" id="brush-color">
-      </section>
-    </main>
-    <aside id="chat">
-      <header id="user-info"></header>
-      <section id="user-list"></section>
-      <section id="scrollback"></section>
-      <input id="chat-input" type="text" placeholder="Chat">
-    </aside>
+    <section id="toolbar">
+      <select id="brush-size">
+        <option value="1">tiny</option>
+        <option value="2">small</option>
+        <option value="5" selected>medium</option>
+        <option value="10">large</option>
+        <option value="20">huge</option>
+      </select>
+      <input type="color" id="brush-color">
+      <div class="spacer"></div>
+      <header id="user-info">
+        <span id="user-name"></span>
+        <button id="change-name">change</button>
+      </header>
+    </section>
+    <section id="content">
+      <main id="drawing">
+        <section id="canvas">
+          <canvas id="primary-canvas" width="600" height="600"></canvas>
+        </section>
+      </main>
+      <aside id="chat" class="hidden">
+        <section id="user-list"></section>
+        <section id="scrollback"></section>
+        <input id="chat-input" type="text" placeholder="Chat">
+      </aside>
+    </section>
   </body>
 </html>

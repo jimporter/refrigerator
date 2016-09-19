@@ -124,8 +124,8 @@ conn.onconnected = (data) => {
   function makeSegment(event, start) {
     let id = generateId();
     let end = {
-      x: event.layerX - primary.offsetLeft,
-      y: event.layerY - primary.offsetTop,
+      x: event.clientX - primary.offsetLeft,
+      y: event.clientY - primary.offsetTop,
     };
     let info = {
       id: id,
@@ -143,11 +143,16 @@ conn.onconnected = (data) => {
     return end;
   }
 
-  document.getElementById('user-info').textContent = data.userInfo.name;
+  document.getElementById('user-name').textContent = data.userInfo.name;
   document.getElementById('user-info').addEventListener('click', (event) => {
-    let name = prompt('Enter new name', event.target.textContent);
+    document.getElementById('chat').classList.toggle('hidden');
+  });
+  document.getElementById('change-name').addEventListener('click', (event) => {
+    let currentName = document.getElementById('user-name').textContent;
+    let name = prompt('Enter new name', currentName);
     if (name)
       conn.sendNameChange(name);
+    event.stopPropagation();
   });
 
   let userList = document.getElementById('user-list');
@@ -225,7 +230,7 @@ conn.onconnected = (data) => {
 
   conn.onnamechange = (data) => {
     if (data.userInfo.id === myUserId)
-      document.getElementById('user-info').textContent = data.userInfo.name;
+      document.getElementById('user-name').textContent = data.userInfo.name;
     else
       UserList.update(data.userInfo);
     ChatLog.updateLines(data.userInfo);

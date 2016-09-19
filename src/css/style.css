@@ -1,13 +1,43 @@
 body {
   margin: 0;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  background-color: #aaaaaa;
+  border-bottom: 1px solid grey;
+}
+
+#toolbar > select,
+#toolbar > input {
+  margin: 0.1rem;
+  height: 1.5rem;
+}
+
+#user-info {
+  padding: 0.25rem;
+  cursor: pointer;
+  width: 25vw;
+  border-left: 1px solid grey;
+}
+
+.spacer {
+  flex: 1;
+}
+
+#content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 #drawing {
   flex-grow: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: lightgrey;
@@ -34,28 +64,17 @@ body {
   display: block;
 }
 
-#toolbar {
-  display: flex;
-}
-
-#toolbar > * {
-  margin: 0.25em;
-  height: 1.5rem;
-}
-
 #chat {
   display: flex;
   flex-direction: column;
-  width: 25vw;
-  height: 100vh;
+  width: calc(25vw + 0.5rem);
   border-left: 1px solid grey;
+  transition: margin-right 0.2s, visibility 0.2s;
 }
 
-#user-info {
-  padding: 0.25em;
-  border-bottom: 1px solid grey;
-  background-color: lightgrey;
-  cursor: pointer;
+#chat.hidden {
+  margin-right: calc(-25vw - 0.5rem - 1px);
+  visibility: hidden;
 }
 
 #user-list {
