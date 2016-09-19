@@ -45,17 +45,14 @@ body {
 #drawing {
   flex-grow: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
   background-color: lightgrey;
   overflow: auto;
 }
 
 #canvas {
+  margin: auto;
   display: inline-block;
-  border: 1px solid grey;
-  box-shadow: 0 0 2em grey;
-  margin: 1em;
+  box-shadow: 0 0 0 1px grey, 0 0 2em grey;
 }
 
 .working-canvas {

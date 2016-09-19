@@ -130,10 +130,11 @@ conn.onconnected = (data) => {
   }
 
   function makeSegment(event, start) {
+    let rect = primary.getBoundingClientRect();
     let id = generateId();
     let end = {
-      x: event.clientX - primary.offsetLeft,
-      y: event.clientY - primary.offsetTop,
+      x: event.pageX - rect.left,
+      y: event.pageY - rect.top,
     };
     let info = {
       id: id,
