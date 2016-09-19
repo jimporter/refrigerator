@@ -50,6 +50,7 @@ body {
 }
 
 #canvas {
+  position: relative;
   margin: auto;
   display: inline-block;
   box-shadow: 0 0 0 1px grey, 0 0 2em grey;

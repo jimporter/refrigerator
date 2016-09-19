@@ -122,22 +122,19 @@ conn.onconnected = (data) => {
   let users = new Map();
   let myUserId = data.userInfo.id;
 
-  // XXX: Who should be responsible for the userId portion? The client (as it is
-  // now) or the server? The latter is safer and harder to spoof, but also less
-  // convenient.
   function generateId() {
-    return data.userId + '/' + drawingId++;
+    return drawingId++;
   }
 
   function makeSegment(event, start) {
-    let rect = primary.getBoundingClientRect();
     let id = generateId();
+    let rect = primary.getBoundingClientRect();
     let end = {
       x: event.pageX - rect.left,
       y: event.pageY - rect.top,
     };
     let info = {
-      id: id,
+      localId: id,
       start: start || end,
       end: end,
       width: parseInt(document.getElementById('brush-size').value),
@@ -242,9 +239,11 @@ conn.onconnected = (data) => {
     let ctx = document.getElementById('primary-canvas').getContext('2d');
     drawSegment(ctx, data.value);
 
-    let working = workingSet.find(data.value.id);
-    if (working)
-      workingSet.release(working);
+    if (data.userId === myUserId) {
+      let working = workingSet.find(data.value.localId);
+      if (working)
+        workingSet.release(working);
+    }
   };
 
   conn.onclear = () => {
