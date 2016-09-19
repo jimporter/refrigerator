@@ -133,6 +133,8 @@ conn.onconnected = (data) => {
   let users = new Map();
   let myUserId = data.userInfo.id;
 
+  document.title = data.title;
+
   function generateId() {
     return drawingId++;
   }
@@ -208,6 +210,8 @@ conn.onconnected = (data) => {
     let img = new Image();
     img.src = data.image;
     img.onload = (event) => {
+      primary.width = img.width;
+      primary.height = img.height;
       primary.getContext('2d').drawImage(img, 0, 0);
     };
   } else {
@@ -258,6 +262,9 @@ conn.onconnected = (data) => {
   };
 
   conn.onclear = () => {
+    // XXX: Give each "page" an ID (the same across all clients?) so that we
+    // know when a new drawing was started. This will avoid sync issues if
+    // someone is drawing and another person creates a new page.
     let canvas = document.getElementById('primary-canvas');
     let ctx = canvas.getContext('2d');
     ctx.fillStyle = 'white';

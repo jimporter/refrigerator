@@ -1,0 +1,24 @@
+body {
+  display: flex;
+  margin: 0;
+  height: 100vh;
+  background-color: lightgrey;
+}
+
+form {
+  display: table;
+  margin: auto;
+  padding: 2em;
+  border: 1px solid grey;
+  background-color: white;
+  box-shadow: 0 0 2em grey;
+}
+
+form > p {
+  display: table-row;
+}
+
+form > p > * {
+  display: table-cell;
+  margin: 0.5em;
+}

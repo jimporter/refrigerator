@@ -18,17 +18,37 @@ function fetchAndRespond(url, event) {
   });
 }
 
-function Server(canvas) {
+function parseQueryString(query) {
+  function decode(s) {
+    return decodeURIComponent(s.replace('+', ' '));
+  }
+
+  let result = {};
+  let s = (query || location.search).substring(1);
+  for (let i of s.split('&')) {
+    let [k, v] = i.split('=', 2);
+    result[decode(k)] = decode(v);
+  }
+  return result;
+}
+
+function Server(name, canvas, options) {
+  this._fullName = 'Refrigerator: ' + name;
   this._canvas = canvas;
   this._scrollback = [];
   this._nextUserId = 0;
   this._users = new Map();
   this._sockets = new Map();
 
-  navigator.publishServer('Refrigerator').then((server) => {
+  if (options.width)
+    canvas.width = options.width;
+  if (options.height)
+    canvas.height = options.height;
 
+  navigator.publishServer(this._fullName).then((server) => {
     const clientURLMap = {
       '/js/network.js': '/js/network-client.js',
+      'index.html': 'refrigerator.html',
     };
 
     server.onfetch = (event) => {
@@ -56,6 +76,7 @@ function Server(canvas) {
 
         socket.send(JSON.stringify({
           type: 'connected',
+          title: this._fullName,
           userInfo: user,
           users: [...this._users.values()],
           image: this._canvas.toDataURL(),
@@ -74,6 +95,7 @@ function Server(canvas) {
 
     this._onmessage({
       type: 'connected',
+      title: this._fullName,
       userInfo: hostUser,
       users: [...this._users.values()],
     });
@@ -156,4 +178,6 @@ Server.prototype._sendMessage = function(data) {
   this._processMessage(data, 0);
 };
 
-let conn = new Server(document.getElementById('primary-canvas'));
+let query = parseQueryString();
+let conn = new Server(query.name, document.getElementById('primary-canvas'),
+                      {width: query.width, height: query.height});
