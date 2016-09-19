@@ -98,7 +98,7 @@ WorkingCanvasSet.prototype = {
 
 function drawSegment(ctx, info) {
   ctx.strokeStyle = info.color;
-  ctx.lineWidth = info.radius;
+  ctx.lineWidth = info.width;
   ctx.lineCap = 'round';
 
   ctx.beginPath();
@@ -131,7 +131,7 @@ conn.onconnected = (data) => {
       id: id,
       start: start || end,
       end: end,
-      radius: parseInt(document.getElementById('brush-size').value),
+      width: parseInt(document.getElementById('brush-size').value),
       color: document.getElementById('brush-color').value,
     };
 
