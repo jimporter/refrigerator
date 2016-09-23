@@ -1,3 +1,7 @@
+const BASE_URL = location.pathname.substring(
+  0, location.pathname.lastIndexOf('/')
+);
+
 function fetchAndRespond(url, event) {
   // XXX: Ideally, we should be able to just pass the result of the `fetch()`
   // call directly to `respondWith()`. However, this will not work if the page
@@ -8,14 +12,20 @@ function fetchAndRespond(url, event) {
   // event.respondWith(fetch(url));
 
   let contentType;
-  return fetch(url).then((response) => {
-    contentType = response.headers.get('Content-Type');
-    return response.blob();
-  }).then((blob) => {
-    event.respondWith(new Response(blob, {
-      headers: {'Content-Type': contentType}
-    }));
-  });
+  event.respondWith(
+    fetch(url).then((response) => {
+      contentType = response.headers.get('Content-Type');
+      return response.blob();
+    }).then((blob) => {
+      return new Response(blob, {
+        headers: {'Content-Type': contentType}
+      });
+    }).catch((e) => {
+      return new Response(e, {
+        status: 404
+      });
+    })
+  );
 }
 
 function parseQueryString(query) {
@@ -48,7 +58,7 @@ function Server(name, canvas, options) {
   navigator.publishServer(this._fullName).then((server) => {
     const clientURLMap = {
       '/js/network.js': '/js/network-client.js',
-      'index.html': 'refrigerator.html',
+      '/': '/refrigerator.html',
     };
 
     server.onfetch = (event) => {
@@ -56,9 +66,7 @@ function Server(name, canvas, options) {
       if (url in clientURLMap)
         url = clientURLMap[url];
 
-      // Remove the leading '/' from the URL so that this works ok when opened
-      // as a local file.
-      fetchAndRespond(url.substr(1), event);
+      fetchAndRespond(BASE_URL + url, event);
     };
 
     let hostUser = this._makeUser();
