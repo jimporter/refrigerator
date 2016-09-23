@@ -1,0 +1,112 @@
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  height: 100vh;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  background-color: #aaaaaa;
+  border-bottom: 1px solid grey;
+}
+
+#toolbar > select,
+#toolbar > input,
+#toolbar > button {
+  margin: 0.1rem;
+  height: 1.5rem;
+}
+
+#toolbar > span {
+  margin: 0.1rem;
+}
+
+#user-info {
+  padding: 0.25rem;
+  cursor: pointer;
+  width: 25vw;
+  border-left: 1px solid grey;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.splitter {
+  border-left: 1px solid grey;
+  height: 100%;
+  margin: 0.1rem;
+}
+
+#content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+#drawing {
+  flex-grow: 1;
+  display: flex;
+  background-color: lightgrey;
+  overflow: auto;
+}
+
+#canvas {
+  position: relative;
+  margin: auto;
+  display: inline-block;
+  box-shadow: 0 0 0 1px grey, 0 0 2em grey;
+}
+
+.working-canvas {
+  position: absolute;
+  pointer-events: none;
+  display: none;
+}
+
+.working-canvas.active {
+  display: block;
+}
+
+#primary-canvas {
+  display: block;
+}
+
+#chat {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  width: calc(25vw + 0.5rem);
+  border-left: 1px solid grey;
+  transition: margin-right 0.2s, visibility 0.2s;
+}
+
+#chat.hidden {
+  margin-right: calc(-25vw - 0.5rem - 1px);
+  visibility: hidden;
+}
+
+#user-list {
+  height: 25vh;
+  overflow: auto;
+  border-bottom: 1px solid grey;
+}
+
+#scrollback {
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.user-line, .chat-line {
+  padding: 0.25em;
+}
+
+.user-line:not(:last-child), .chat-line:not(:last-child) {
+  border-bottom: 1px solid lightgrey;
+}
+
+.chat-author {
+  font-weight: 800;
+}

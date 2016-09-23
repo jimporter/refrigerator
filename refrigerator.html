@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Refrigerator</title>
+    <script type="text/javascript" src="js/network-common.js" defer></script>
+    <script type="text/javascript" src="js/network.js" defer></script>
+    <script type="text/javascript" src="js/ui.js" defer></script>
+    <link rel="stylesheet" href="css/refrigerator.css">
+  </head>
+  <body>
+    <section id="toolbar">
+      <button id="new-drawing">new drawing</button>
+
+      <div class="splitter"></div>
+
+      <span>zoom</span>
+      <select id="zoom">
+        <option value="0.125">12.5%</option>
+        <option value="0.25">25%</option>
+        <option value="0.5">50%</option>
+        <option value="1" selected>100%</option>
+        <option value="2">200%</option>
+        <option value="4">400%</option>
+        <option value="8">800%</option>
+      </select>
+
+      <div class="splitter"></div>
+
+      <select id="brush-size">
+        <option value="1">tiny</option>
+        <option value="2">small</option>
+        <option value="5" selected>medium</option>
+        <option value="10">large</option>
+        <option value="20">huge</option>
+      </select>
+      <input type="color" id="brush-color">
+
+      <div class="spacer"></div>
+
+      <header id="user-info">
+        <span id="user-name"></span>
+        <button id="change-name">change</button>
+      </header>
+    </section>
+    <section id="content">
+      <main id="drawing">
+        <section id="canvas">
+          <canvas id="primary-canvas"></canvas>
+        </section>
+      </main>
+      <aside id="chat" class="hidden">
+        <section id="user-list"></section>
+        <section id="scrollback"></section>
+        <input id="chat-input" type="text" placeholder="Chat">
+      </aside>
+    </section>
+  </body>
+</html>
