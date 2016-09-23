@@ -1,4 +1,6 @@
 function Client() {
+  Connection.call(this);
+
   this._socket = new WebSocket('ws://' + location.host);
   this._socket.onmessage = (event) => {
     return this._onmessage(JSON.parse(event.data));

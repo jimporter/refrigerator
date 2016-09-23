@@ -43,6 +43,8 @@ function parseQueryString(query) {
 }
 
 function Server(name, canvas, options) {
+  Connection.call(this);
+
   this._fullName = 'Refrigerator: ' + name;
   this._canvas = canvas;
   this._scrollback = [];
@@ -132,14 +134,17 @@ Server.prototype._findUserByName = function(name) {
 };
 
 Server.prototype._send = function(data, userId) {
-  if (userId === 0)
-    this._onmessage(data);
-  else
+  if (userId === 0) {
+    // Don't run this immediately, since the host might send a message and then
+    // do some extra work before it's ready to receive.
+    setTimeout(() => this._onmessage(data), 0);
+  } else {
     this._sockets.get(userId).send(JSON.stringify(data));
+  }
 };
 
 Server.prototype._broadcast = function(data) {
-  this._onmessage(data);
+  this._send(data, 0);
 
   var string = JSON.stringify(data);
   for (let socket of this._sockets.values())

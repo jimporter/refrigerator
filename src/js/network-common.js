@@ -1,4 +1,6 @@
-function Connection() {}
+function Connection() {
+  this._nextMessageId = 0;
+}
 
 Connection.prototype = {
   onconnected: null,
@@ -12,6 +14,10 @@ Connection.prototype = {
 
   _sendMessage: null,
 
+  _generateId: function() {
+    return this._nextMessageId++;
+  },
+
   _onmessage: function(data) {
     let handler = 'on' + data.type;
     if (this[handler])
@@ -19,18 +25,26 @@ Connection.prototype = {
   },
 
   sendChat: function(message) {
-    this._sendMessage({type: 'chat', value: message});
+    let id = this._generateId();
+    this._sendMessage({type: 'chat', messageId: id, value: message});
+    return id;
   },
 
   sendDrawing: function(info) {
-    this._sendMessage({type: 'drawing', value: info});
+    let id = this._generateId();
+    this._sendMessage({type: 'drawing', messageId: id, value: info});
+    return id;
   },
 
   sendClear: function(info) {
-    this._sendMessage({type: 'clear'});
+    let id = this._generateId();
+    this._sendMessage({type: 'clear', messageId: id});
+    return id;
   },
 
   sendNameChange: function(name) {
-    this._sendMessage({type: 'namechange', value: name});
+    let id = this._generateId();
+    this._sendMessage({type: 'namechange', messageId: id, value: name});
+    return id;
   },
 };

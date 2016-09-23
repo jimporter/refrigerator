@@ -128,36 +128,30 @@ document.getElementById('zoom').addEventListener('change', (event) => {
 
 conn.onconnected = (data) => {
   let primary = document.getElementById('primary-canvas');
-  let drawingId = 0;
   let workingSet = new WorkingCanvasSet(primary, 64);
   let users = new Map();
   let myUserId = data.userInfo.id;
 
   document.title = data.title;
 
-  function generateId() {
-    return drawingId++;
-  }
-
   function makeSegment(event, start) {
-    let id = generateId();
     let rect = primary.getBoundingClientRect();
     let end = {
       x: (event.pageX - rect.left) * (primary.width / rect.width),
       y: (event.pageY - rect.top) * (primary.height / rect.height),
     };
     let info = {
-      localId: id,
       start: start || end,
       end: end,
       width: parseInt(document.getElementById('brush-size').value),
       color: document.getElementById('brush-color').value,
     };
 
-    let working = workingSet.acquire(id);
+    let messageId = conn.sendDrawing(info);
+    let working = workingSet.acquire(messageId);
+    console.log('acquired', messageId);
     let ctx = working.getContext('2d');
     drawSegment(ctx, info);
-    conn.sendDrawing(info);
 
     return end;
   }
@@ -253,9 +247,10 @@ conn.onconnected = (data) => {
   conn.ondrawing = (data) => {
     let ctx = document.getElementById('primary-canvas').getContext('2d');
     drawSegment(ctx, data.value);
+    console.log('received', data.messageId);
 
     if (data.userId === myUserId) {
-      let working = workingSet.find(data.value.localId);
+      let working = workingSet.find(data.messageId);
       if (working)
         workingSet.release(working);
     }
