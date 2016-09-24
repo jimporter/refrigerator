@@ -149,7 +149,6 @@ conn.onconnected = (data) => {
 
     let messageId = conn.sendDrawing(info);
     let working = workingSet.acquire(messageId);
-    console.log('acquired', messageId);
     let ctx = working.getContext('2d');
     drawSegment(ctx, info);
 
@@ -247,7 +246,6 @@ conn.onconnected = (data) => {
   conn.ondrawing = (data) => {
     let ctx = document.getElementById('primary-canvas').getContext('2d');
     drawSegment(ctx, data.value);
-    console.log('received', data.messageId);
 
     if (data.userId === myUserId) {
       let working = workingSet.find(data.messageId);
