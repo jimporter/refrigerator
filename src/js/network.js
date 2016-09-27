@@ -89,7 +89,11 @@ function Server(name, canvas, options) {
           title: this._fullName,
           userInfo: user,
           users: [...this._users.values()],
-          image: this._canvas.toDataURL(),
+          image: {
+            width: this._canvas.width,
+            height: this._canvas.height,
+            data: this._canvas.toDataURL(),
+          },
           chat: this._scrollback
         }));
       };
@@ -192,5 +196,8 @@ Server.prototype._sendMessage = function(data) {
 };
 
 let query = parseQueryString();
-let conn = new Server(query.name, document.getElementById('primary-canvas'),
-                      {width: query.width, height: query.height});
+let conn = new Server(
+  query.name,
+  document.querySelector('#canvas .primary-canvas'),
+  {width: query.width, height: query.height}
+);

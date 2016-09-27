@@ -4,11 +4,12 @@
     <title>Refrigerator</title>
     <script type="text/javascript" src="js/network-common.js" defer></script>
     <script type="text/javascript" src="js/network.js" defer></script>
+    <script type="text/javascript" src="js/canvas.js" defer></script>
     <script type="text/javascript" src="js/ui.js" defer></script>
     <link rel="stylesheet" href="css/refrigerator.css">
   </head>
   <body>
-    <section id="toolbar">
+    <form id="toolbar">
       <button id="new-drawing">new drawing</button>
 
       <div class="splitter"></div>
@@ -41,11 +42,11 @@
         <span id="user-name"></span>
         <button id="change-name">change</button>
       </header>
-    </section>
+    </form>
     <section id="content">
       <main id="drawing">
         <section id="canvas">
-          <canvas id="primary-canvas"></canvas>
+          <canvas class="primary-canvas"></canvas>
         </section>
       </main>
       <aside id="chat" class="hidden">
